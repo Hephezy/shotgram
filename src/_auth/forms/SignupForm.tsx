@@ -17,8 +17,8 @@ const SignupForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { checkAuthUser, isLoading: isUserLoading } = useUserContext(); 
-  const { mutateAsync: createUserAccount, isPending: isCreatingUser } = useCreateUserAccount();
-  const { mutateAsync: signInAccount, isPending: isSigningIn } = useSignInAccount();
+  const { mutateAsync: createUserAccount, isPending: iisCreatingAccount } = useCreateUserAccount();
+  const { mutateAsync: signInAccount, isPending: isSigningInUser } = useSignInAccount();
 
   const form = useForm<z.infer<typeof SignupValidation>>({
     resolver: zodResolver(SignupValidation),
@@ -126,7 +126,7 @@ const SignupForm = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isCreatingUser
+            {iisCreatingAccount || isSigningInUser || isUserLoading
               ? (
                 <div className="flex-center gap-2">
                   <Loader /> Loading...
