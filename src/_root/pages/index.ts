@@ -8,3 +8,5 @@ export { default as PostDetails } from "./PostDetails";
 export { default as Profile } from "./Profile";
 export { default as Saved } from "./Saved";
 export { default as UpdateProfile } from "./UpdateProfile";
+export { default as Chat } from "./Chat";
+export { default as Notification } from "./Notifications";

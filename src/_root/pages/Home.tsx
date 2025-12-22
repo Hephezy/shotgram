@@ -3,17 +3,18 @@ import PostCard from "@/components/shared/PostCard";
 import RightSidebar from "@/components/shared/RightSidebar";
 import { useToast } from "@/components/ui/use-toast";
 import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutations";
-import { Models } from "appwrite";
+import { IPost } from "@/types";
+import { useEffect } from "react";
 
 const Home = () => {
   const { data: posts, isPending: isPostLoading, isError: isPostsError } = useGetRecentPosts();
   const { toast } = useToast();
 
-  if (isPostsError) {
-    toast({ title: "Something went wrong." });
-
-    return;
-  }
+  useEffect(() => {
+    if (isPostsError) {
+      toast({ title: "Something went wrong." });
+    }
+  }, [isPostsError, toast]);
 
   return (
     <div className="flex flex-1">
@@ -24,8 +25,8 @@ const Home = () => {
             <Loader />
           ) : (
             <ul className="flex flex-col flex-1 gap-9 w-full ">
-              {posts?.documents.map((post: Models.Document) => (
-                <li key={post.$id} className="flex justify-center w-full">
+              {posts?.documents.map((post: IPost) => (
+                <li key={post.id} className="flex justify-center w-full">
                   <PostCard post={post} />
                 </li>
               ))}

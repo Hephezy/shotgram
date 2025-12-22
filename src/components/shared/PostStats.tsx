@@ -1,39 +1,34 @@
-import { useDeleteSavedPosts, useGetCurrentUser, useLikePosts, useSavePosts } from "@/lib/react-query/queriesAndMutations";
+import { useDeleteSavedPosts, useLikePosts, useSavePosts } from "@/lib/react-query/queriesAndMutations";
 import { checkIsLiked } from "@/lib/utils";
-import { Models } from "appwrite";
 import Loader from "@/components/shared/Loader";
 import React, { useState, useEffect } from "react";
+import { IPost } from "@/types";
 
 type PostStatsProps = {
-    post?: Models.Document;
+    post: IPost;
     userId: string;
 }
 
 const PostStats = ({ post, userId }: PostStatsProps) => {
+    const likesList = post.likes;
 
-    const likesList = post?.likes.map((user: Models.Document) => user.$id);
-
-    const [likes, setLikes] = useState(likesList);
+    const [likes, setLikes] = useState<string[]>(likesList);
     const [isSaved, setIsSaved] = useState(false);
 
     const { mutate: likePost } = useLikePosts();
     const { mutate: savePost, isPending: isSavingPost } = useSavePosts();
     const { mutate: deleteSavedPost, isPending: isDeletingSaved } = useDeleteSavedPosts();
 
-    const { data: currentUser } = useGetCurrentUser();
-
-    const savedPostRecord = currentUser?.save.find((record: Models.Document) => record.post.$id === post?.$id);
+    const savedPostRecord = post.save.find((record) => record.userId === userId);
 
     useEffect(() => {
         setIsSaved(!!savedPostRecord);
-    }, [currentUser]);
-
+    }, [userId, savedPostRecord]);
 
     const handleLikePost = (e: React.MouseEvent) => {
         e.stopPropagation();
 
         let newLikes = [...likes];
-
         const hasLiked = newLikes.includes(userId);
 
         if (hasLiked) {
@@ -43,7 +38,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
         }
 
         setLikes(newLikes);
-        likePost({ postId: post?.$id || '', likesArray: newLikes });
+        likePost({ postId: post.id, likesArray: newLikes });
     };
 
     const handleSavePost = (e: React.MouseEvent) => {
@@ -51,12 +46,11 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
 
         if (savedPostRecord) {
             setIsSaved(false);
-            deleteSavedPost(savedPostRecord.$id);
+            deleteSavedPost(savedPostRecord.id);
         } else {
-            savePost({ postId: post?.$id || '', userId });
+            savePost({ postId: post.id, userId });
             setIsSaved(true);
         }
-
     };
 
     return (
@@ -78,7 +72,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
                     ? <Loader />
                     : <img
                         src={isSaved ? "/assets/icons/saved.svg" : "/assets/icons/save.svg"}
-                        alt="like"
+                        alt="save"
                         width={20}
                         height={20}
                         onClick={handleSavePost}

@@ -1,19 +1,18 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useForm } from "react-hook-form";
-
-import { useToast } from "@/components/ui/use-toast"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button";
-import { SigninValidation } from "@/lib/validation";
-import { z } from "zod";
-import Loader from "@/components/shared/Loader";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Loader from "@/components/shared/Loader";
+import { SigninValidation } from "@/lib/validation";
 import { useSignInAccount } from "@/lib/react-query/queriesAndMutations";
 import { useUserContext } from "@/context/AuthContext";
+import { supabase } from '@/lib/supabase/config';
 
 const SigninForm = () => {
-
   const { toast } = useToast();
   const navigate = useNavigate();
   const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
@@ -21,45 +20,47 @@ const SigninForm = () => {
 
   const form = useForm<z.infer<typeof SigninValidation>>({
     resolver: zodResolver(SigninValidation),
-    defaultValues: {
-      email: '',
-      password: ''
-    },
+    defaultValues: { email: '', password: '' },
   });
 
-  // 2. Define a submit handler.
+  const handleGoogleLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      toast({ title: "Google Login Failed", description: "Please try again." });
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof SigninValidation>) {
-  
     const session = await signInAccount({
       email: values.email,
       password: values.password
     });
 
     if (!session) {
-      return toast({ title: "Sign In Failed. Please try again later" });
+      return toast({ title: "Sign In Failed. Please check your email/password." });
     }
 
     const isLoggedIn = await checkAuthUser();
-
     if (isLoggedIn) {
       form.reset();
-
       navigate('/');
     } else {
-      return toast({ title: "Sign Up Failed. Please try again later" });
+      return toast({ title: "Login Failed. Please try again." });
     }
-
   }
 
   return (
     <Form {...form}>
-
       <div className="sm:w-420 flex-center flex-col">
-        <img
-          src="/assets/images/logo.svg"
-          alt="logo"
-        />
-
+        <img src="/assets/images/logo.svg" alt="logo" />
         <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">Log In to your account</h2>
         <p className="text-light-3 small-medium md:base-regular mt-2">Welcome Back, please enter your details</p>
 
@@ -70,9 +71,7 @@ const SigninForm = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" className="shad-input" {...field} />
-                </FormControl>
+                <FormControl><Input type="email" className="shad-input" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -83,32 +82,23 @@ const SigninForm = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" className="shad-input" {...field} />
-                </FormControl>
+                <FormControl><Input type="password" className="shad-input" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <Button type="submit" className="shad-button_primary">
-            {isUserLoading
-              ? (
-                <div className="flex-center gap-2">
-                  <Loader /> Loading...
-                </div>
-              )
-              : "Sign In"
-            }
+            {isUserLoading ? <div className="flex-center gap-2"><Loader /> Loading...</div> : "Sign In"}
+          </Button>
+
+          <Button type="button" className="shad-button_dark_4 flex gap-2 w-full" onClick={handleGoogleLogin}>
+            <img src="/assets/icons/google.svg" alt="google" width={20} /> Sign in with Google
           </Button>
 
           <p className="text-small-regular text-light-2 text-center mt-2">
             Don't have an account?
-            <Link
-              to="/sign-up"
-              className="text-primary-500 text-small-semibold ml-1"
-            >
-              Sign Up
-            </Link>
+            <Link to="/sign-up" className="text-primary-500 text-small-semibold ml-1"> Sign Up</Link>
           </p>
         </form>
       </div>

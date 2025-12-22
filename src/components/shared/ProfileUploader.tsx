@@ -28,13 +28,20 @@ const ProfileUploader = ({ fieldChange, mediaUrl }: ProfileUploaderProps) => {
         },
     });
 
+    const getOptimizedImageUrl = (url: string, width = 150) => {
+        if (url && url.includes('supabase.co') && !url.startsWith('blob:')) {
+            return `${url}?width=${width}&resize=cover&quality=80`;
+        }
+        return url;
+    };
+
     return (
         <div {...getRootProps()}>
             <input {...getInputProps()} className="cursor-pointer" />
 
             <div className="cursor-pointer flex-center gap-4">
                 <img
-                    src={fileUrl || "/assets/icons/profile-placeholder.svg"}
+                    src={getOptimizedImageUrl(fileUrl) || "/assets/icons/profile-placeholder.svg"}
                     alt="image"
                     className="h-24 w-24 rounded-full object-cover object-top"
                 />

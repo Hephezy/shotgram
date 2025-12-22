@@ -1,9 +1,10 @@
+import { IPost } from "@/types";
 import GridPostList from "./GridPostList";
 import Loader from "./Loader";
 
 export type SearchResultProps = {
     isSearchFetching: boolean;
-    searchedPosts: any;
+    searchedPosts?: { documents: IPost[] };
 };
 
 const SearchResults = ({ isSearchFetching, searchedPosts }: SearchResultProps) => {

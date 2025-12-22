@@ -1,5 +1,4 @@
 import * as z from "zod";
-import { Models } from "appwrite";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,9 +19,10 @@ import { Button } from "../ui/button";
 import { useCreatePost, useUpdatePost } from "@/lib/react-query/queriesAndMutations";
 import FileUploader from "../shared/FileUploader";
 import Loader from "../shared/Loader";
+import { IPost } from "@/types";
 
 type PostFormProps = {
-    post?: Models.Document;
+    post?: IPost;
     action: "Create" | "Update";
 };
 
@@ -52,9 +52,9 @@ const PostForm = ({ post, action }: PostFormProps) => {
         if (post && action === "Update") {
             const updatedPost = await updatePost({
                 ...value,
-                postId: post.$id,
+                postId: post.id,
                 imageId: post.imageId,
-                imageUrl: post.imageUrl,
+                imageUrl: post.imageUrl as unknown as URL, // API handles string, type expects URL
             });
 
             if (!updatedPost) {
@@ -62,7 +62,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
                     title: `${action} post failed. Please try again.`,
                 });
             }
-            return navigate(`/posts/${post.$id}`);
+            return navigate(`/posts/${post.id}`);
         }
 
         // ACTION = CREATE
@@ -110,7 +110,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
                             <FormControl>
                                 <FileUploader
                                     fieldChange={field.onChange}
-                                    mediaUrl={post?.imageUrl}
+                                    mediaUrl={post?.imageUrl || ""}
                                 />
                             </FormControl>
                             <FormMessage className="shad-form_message" />

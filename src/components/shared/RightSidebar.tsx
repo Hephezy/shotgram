@@ -2,17 +2,27 @@ import UserCard from './UserCard'
 import { useGetUsers } from '@/lib/react-query/queriesAndMutations';
 import Loader from './Loader';
 import { useToast } from '../ui/use-toast';
+import { useEffect } from 'react';
+import { useUserContext } from '@/context/AuthContext';
 
 const RightSidebar = () => {
-
+    const { user } = useUserContext();
     const { data: creators, isLoading: isUserLoading, isError: isErrorCreators } = useGetUsers(10);
     const { toast } = useToast();
 
-    if (isErrorCreators) {
-        toast({ title: "Something went wrong." });
+    useEffect(() => {
+        if (isErrorCreators) {
+            toast({ title: "Something went wrong." });
+        }
+    }, [isErrorCreators, toast]);
 
-        return;
-    }
+    // If error, you can return null or just don't render the list
+    if (isErrorCreators) return null;
+
+    // Filter out the current user from the creators list
+    const filteredCreators = creators?.documents.filter(
+        (creator) => creator.id !== user.id
+    );
 
     return (
         <div className='rightsidebar'>
@@ -24,8 +34,8 @@ const RightSidebar = () => {
                         ? <Loader />
                         : (
                             <ul className='grid 2xl:grid-cols-2 gap-6'>
-                                {creators?.documents.map((creator) => (
-                                    <li key={creator?.$id}>
+                                {filteredCreators?.map((creator) => (
+                                    <li key={creator?.id}>
                                         <UserCard user={creator} />
                                     </li>
                                 ))}
@@ -38,4 +48,4 @@ const RightSidebar = () => {
     )
 }
 
-export default RightSidebar
+export default RightSidebar;

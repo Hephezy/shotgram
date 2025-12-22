@@ -4,13 +4,13 @@ import SearchResults from '@/components/shared/SearchResults';
 import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/useDebounce';
 import { useGetPosts, useSearchPosts } from '@/lib/react-query/queriesAndMutations';
-import { useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import { useInView } from "react-intersection-observer";
 
 const Explore = () => {
-
-  const [searchValue, setSearchValue] = useState('');
   const { ref, inView } = useInView();
+  const [searchValue, setSearchValue] = useState('');
+
   const debouncedSearch = useDebounce(searchValue, 500);
   const { data: posts, fetchNextPage, hasNextPage } = useGetPosts();
   const { data: searchedPosts, isFetching: isSearchFetching } = useSearchPosts(debouncedSearch);
@@ -27,8 +27,9 @@ const Explore = () => {
         <Loader />
       </div>
     );
-  
+
   const shouldShowSearchResults = searchValue !== "";
+
   const shouldShowPosts = !shouldShowSearchResults &&
     posts.pages.every((item) => item?.documents.length === 0);
 
@@ -38,14 +39,14 @@ const Explore = () => {
         <h2 className='h3-bold md:h2-bold w-full'>Search Posts</h2>
 
         <div className='flex gap-1 px-4 w-full rounded-lg bg-dark-4'>
-          <img 
+          <img
             src="/assets/icons/search.svg"
             alt='search'
             width={24}
             height={24}
           />
 
-          <Input 
+          <Input
             type="text"
             placeholder='Search'
             className='explore-search'
@@ -60,7 +61,7 @@ const Explore = () => {
 
         <div className='flex-center gap-3 bg-dark-3 rounded-xl px-4 py-2 cursor-pointer'>
           <p className='small-medium md:base-medium text-light-2'>All</p>
-          <img 
+          <img
             src="/assets/icons/filter.svg"
             alt="filter"
             width={20}

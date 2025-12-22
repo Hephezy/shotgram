@@ -2,7 +2,7 @@ import GridPostList from "@/components/shared/GridPostList";
 import Loader from "@/components/shared/Loader";
 import { Button } from "@/components/ui/button";
 import { useUserContext } from "@/context/AuthContext";
-import { useGetUserById } from "@/lib/react-query/queriesAndMutations";
+import { useGetUserById, useGetFollowCounts, useGetFollowStatus, useFollowUser, useUnfollowUser } from "@/lib/react-query/queriesAndMutations";
 import {
   Route,
   Routes,
@@ -12,8 +12,6 @@ import {
   useLocation,
 } from "react-router-dom";
 import LikedPosts from "./LikedPosts";
-
-
 
 interface StabBlockProps {
   value: string | number;
@@ -33,6 +31,19 @@ const Profile = () => {
   const { pathname } = useLocation();
 
   const { data: currentUser } = useGetUserById(id || "");
+  const { data: followCounts } = useGetFollowCounts(id || "");
+  const { data: followStatus } = useGetFollowStatus(id || "");
+  const { mutate: followUser, isPending: isFollowing } = useFollowUser();
+  const { mutate: unfollowUser, isPending: isUnfollowing } = useUnfollowUser();
+
+  const handleFollowClick = () => {
+    if (!id) return;
+    if (followStatus?.isFollowing) {
+      unfollowUser(id);
+    } else {
+      followUser(id);
+    }
+  };
 
   if (!currentUser)
     return (
@@ -63,9 +74,9 @@ const Profile = () => {
             </div>
 
             <div className="flex gap-8 mt-10 items-center justify-center xl:justify-start flex-wrap z-20">
-              <StatBlock value={currentUser.posts.length} label="Posts" />
-              <StatBlock value={20} label="Followers" />
-              <StatBlock value={20} label="Following" />
+              <StatBlock value={currentUser.posts?.length || 0} label="Posts" />
+              <StatBlock value={followCounts?.followers || 0} label="Followers" />
+              <StatBlock value={followCounts?.following || 0} label="Following" />
             </div>
 
             <p className="small-medium md:base-medium text-center xl:text-left mt-7 max-w-screen-sm">
@@ -74,10 +85,10 @@ const Profile = () => {
           </div>
 
           <div className="flex justify-center gap-4">
-            <div className={`${user.id !== currentUser.$id && "hidden"}`}>
+            <div className={`${user.id !== currentUser.id && "hidden"}`}>
               <Link
-                to={`/update-profile/${currentUser.$id}`}
-                className={`h-12 bg-dark-4 px-5 text-light-1 flex-center gap-2 rounded-lg ${user.id !== currentUser.$id && "hidden"
+                to={`/update-profile/${currentUser.id}`}
+                className={`h-12 bg-dark-4 px-5 text-light-1 flex-center gap-2 rounded-lg ${user.id !== currentUser.id && "hidden"
                   }`}>
                 <img
                   src={"/assets/icons/edit.svg"}
@@ -91,15 +102,26 @@ const Profile = () => {
               </Link>
             </div>
             <div className={`${user.id === id && "hidden"}`}>
-              <Button type="button" className="shad-button_primary px-8">
-                Follow
+              <Button
+                type="button"
+                className={`px-8 ${followStatus?.isFollowing ? 'shad-button_dark_4' : 'shad-button_primary'}`}
+                onClick={handleFollowClick}
+                disabled={isFollowing || isUnfollowing}
+              >
+                {isFollowing || isUnfollowing ? (
+                  <Loader />
+                ) : followStatus?.isFollowing ? (
+                  'Following'
+                ) : (
+                  'Follow'
+                )}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {currentUser.$id === user.id && (
+      {currentUser.id === user.id && (
         <div className="flex max-w-5xl w-full">
           <Link
             to={`/profile/${id}`}
@@ -133,7 +155,7 @@ const Profile = () => {
           index
           element={<GridPostList posts={currentUser.posts} showUser={false} />}
         />
-        {currentUser.$id === user.id && (
+        {currentUser.id === user.id && (
           <Route path="/liked-posts" element={<LikedPosts />} />
         )}
       </Routes>

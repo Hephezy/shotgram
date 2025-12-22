@@ -1,15 +1,34 @@
-import { Link } from 'react-router-dom'
-import { Button } from '../ui/button'
-import { Models } from 'appwrite';
+import { Link } from 'react-router-dom';
+import { Button } from '../ui/button';
+import { IUser } from '@/types';
+import { useFollowUser, useUnfollowUser, useGetFollowStatus } from '@/lib/react-query/queriesAndMutations';
+import Loader from './Loader';
 
 type UserCardProps = {
-    user: Models.Document;
+    user: IUser;
 };
 
 const UserCard = ({ user }: UserCardProps) => {
+    const { data: followStatus, isLoading: isStatusLoading } = useGetFollowStatus(user.id);
+    const { mutate: followUser, isPending: isFollowing } = useFollowUser();
+    const { mutate: unfollowUser, isPending: isUnfollowing } = useUnfollowUser();
+
+    const handleFollowClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (followStatus?.isFollowing) {
+            unfollowUser(user.id);
+        } else {
+            followUser(user.id);
+        }
+    };
+
+    const isLoading = isFollowing || isUnfollowing || isStatusLoading;
+
     return (
         <Link
-            to={`/profile/${user.$id}`}
+            to={`/profile/${user.id}`}
             className='user-card'
         >
             <img
@@ -30,12 +49,20 @@ const UserCard = ({ user }: UserCardProps) => {
             <Button
                 type="button"
                 size="sm"
-                className='shad-button_primary px-5'
+                className={`px-5 ${followStatus?.isFollowing ? 'shad-button_dark_4' : 'shad-button_primary'}`}
+                onClick={handleFollowClick}
+                disabled={isLoading}
             >
-                Follow
+                {isLoading ? (
+                    <Loader />
+                ) : followStatus?.isFollowing ? (
+                    'Following'
+                ) : (
+                    'Follow'
+                )}
             </Button>
         </Link>
     )
 }
 
-export default UserCard
+export default UserCard;

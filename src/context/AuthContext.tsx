@@ -1,17 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { IUser } from "@/types";
-import { getCurrentUser } from "@/lib/appwrite/api";
-
-export const INITIAL_USER = {
-    id: "",
-    name: "",
-    username: "",
-    email: "",
-    imageUrl: "",
-    bio: "",
-};
+import { INITIAL_USER, IUser } from "@/types";
+import { getCurrentUser } from "@/lib/supabase/api";
 
 const INITIAL_STATE = {
     user: INITIAL_USER,
@@ -45,12 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const currentAccount = await getCurrentUser();
             if (currentAccount) {
                 setUser({
-                    id: currentAccount.$id,
+                    id: currentAccount.id,
                     name: currentAccount.name,
                     username: currentAccount.username,
                     email: currentAccount.email,
                     imageUrl: currentAccount.imageUrl,
                     bio: currentAccount.bio,
+                    save: currentAccount.save || [],
+                    liked: currentAccount.liked || [],
                 });
                 setIsAuthenticated(true);
 
@@ -67,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        const cookieFallback = localStorage.getItem("cookieFallback");
+        const cookieFallback = localStorage.getItem("sb-yvznlwqgphfggfecdzsk-auth-token");
         if (
             cookieFallback === "[]" ||
             cookieFallback === null ||
