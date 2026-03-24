@@ -26,15 +26,25 @@ const SigninForm = () => {
   const handleGoogleLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
     try {
+      const redirectTo =
+        import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
-        }
+          redirectTo,
+        },
       });
+
       if (error) throw error;
     } catch (error) {
-      toast({ title: "Google Login Failed", description: "Please try again." });
+      const errorMessage =
+        error instanceof Error &&
+        error.message.includes('Unsupported provider')
+          ? 'Google auth is not enabled in Supabase. Enable Google under Auth > Providers.'
+          : 'Please try again.';
+
+      toast({ title: "Google Login Failed", description: errorMessage });
     }
   };
 

@@ -43,10 +43,15 @@ const formatPost = (post: DBPost) => ({
 // ================== AUTHENTICATION ==================
 export async function createUserAccount(user: INewUser) {
   try {
+    const emailRedirectTo =
+      import.meta.env.VITE_AUTH_REDIRECT_URL ||
+      (typeof window !== "undefined" ? `${window.location.origin}/` : undefined);
+
     const { data: newAccount, error } = await supabase.auth.signUp({
       email: user.email,
       password: user.password,
       options: {
+        ...(emailRedirectTo ? { emailRedirectTo } : {}),
         data: {
           name: user.name,
           username: user.username,
